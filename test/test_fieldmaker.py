@@ -135,7 +135,6 @@ def test_vocabularyReference():
     assert a.count_elements() == 7
 
     # print(a.tostring())
-    # a.validate()
 
 
 def test_repeatableGroup():
@@ -188,9 +187,13 @@ def test_module():
     # print (a.tostring())
     m = Module(file="debug.xml")
     assert m
+    m._dropAttribs(xpath="//m:moduleItem", attrib="uuid")
+    assert m.validate()
 
     m = Module(xml=a.tostring())
+    m._dropAttribs(xpath="//m:moduleItem", attrib="uuid")
     assert m
+    assert m.validate()
 
     m = Module(
         xml="""
@@ -209,6 +212,8 @@ def test_module():
     )
 
     assert m
+    m._dropAttribs(xpath="//m:moduleItem", attrib="uuid")
+    assert m.validate()
 
     # not clear why this does not work
     # doc = etree.ElementTree(a.element)
@@ -228,3 +233,15 @@ def test_moduleTotalSize():
     a = df.wrap(mtype="Object", ID=1234)
     # print(a.tostring())
     assert a
+
+
+def test_validate():
+    """
+    Validates now that we transform to string and back. A bit strange.
+    """
+    df = dataField(name="InventarNrSTxt", value="I C 7703")
+    a = df.wrap(mtype="Object", ID=1234)
+    a.validate()
+    # a = application()
+    # m = Module(xml=a.tostring())
+    # m.validate()

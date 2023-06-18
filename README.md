@@ -1,5 +1,4 @@
-# MpApi-Fieldmaker
-Fieldmaker - Create zml elements easily
+# MpApi.Fieldmaker - Create zml elements easily
 
 This module's primary purpose is to create zml elements; 
 
@@ -7,14 +6,12 @@ Perhaps this module can also be used to parse existing data. If not, it doesn't
 really simplify changing existing data.
 
 In other words: We going for a clean interfaces that reduces the lines of code
-comparative to using pure lxml.
+-- compared to using pure lxml.
 
 This module replaces the old "from-scratch" interface from MpApi.Module. 
 
 USAGE
     from Fieldmaker import application, modules, module, moduleItem, dataField
-
-    # ATTENTION: Does module conflicts with mpapi.Module? no
 
     # Constructors are straight forward
     dF = dataField(name="objObjectCategory",value="blabla")

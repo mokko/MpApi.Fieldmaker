@@ -47,21 +47,18 @@ USAGE
 
 
 Methods
-- add()   : appends lxml.element at the right place
+- add(): appends lxml.element at the right place
     mi = moduleItem(ID=1234)
     mi.add(dataField(name="objObjectCategory",value="blabla"))
     dF = mi.add(dataField(name="objObjectCategory",value="blabla"))
 - element: returns lxml element or node
     df = mi.add(dataField(name="objObjectCategory",value="blabla"))
     nodes = df.element
-- wrap: wraps application, modules, module around moduleItem or 
-- wrap: wraps application, modules, module with 
-            name=Object, moduleItem with ID 1233
+- wrap(): wraps application, modules, module around fields, moduleItem etc. 
     df = mi.add(dataField(name="objObjectCategory",value="blabla"))
-    a = df.wrap(module=Object) 
-    doc = a.element
-- xpath: xpath with module default namespace 
-
+    a = df.wrap(module=Object, ID=1234) 
+- xpath(str): xpath with module default namespace 
+    result = mi.xpath("/application/modules/module")
 
 
  # Fieldmaker
@@ -105,10 +102,7 @@ from typing import Optional
 
 # as usual I have trouble with namespaces, so I am not using default namespace NSMAP,
 # but old skool NSMAP with m prefix
-# NSMAP = {None: "http://www.zetcom.com/ria/ws/module"}
-NSMAP = {
-    "m": "http://www.zetcom.com/ria/ws/module"
-}  # for xpath we need apparently prefix
+NSMAP = {None: "http://www.zetcom.com/ria/ws/module"}
 
 known_module_types = ("Object", "Mulimedia")  # TODO: make this configurable
 known_dataTypes = ("Boolean", "Clob", "Date", "Long", "Numeric", "Timestamp", "Varchar")
@@ -186,7 +180,6 @@ class baseField:
 
 class application(baseField):
     def __init__(self) -> None:
-        NSMAP = {None: "http://www.zetcom.com/ria/ws/module"}
         self.element = etree.Element("application", nsmap=NSMAP)
 
     def tofile(self, path: str) -> None:
@@ -215,12 +208,15 @@ class application(baseField):
         print(self.tostring())
 
     def validate(self):
-        # NAMESPACE ISSUES! DOESN'T WORK!
         xsd_str = pkgutil.get_data("mpapi.client", "data/xsd/module_1_6.xsd")
-        xsdN = etree.fromstring(xsd_str)
-        xmlschema = etree.XMLSchema(xsdN)
-        parser = etree.XMLParser(schema=xmlschema)
-        xmlschema.assertValid(self.element)  # , nsmap=NSMAP
+        xmlschema_doc = etree.fromstring(xsd_str)
+        xmlschema = etree.XMLSchema(xmlschema_doc)
+
+        #
+        # why do I have to transform it to string and back?
+        #
+        ET = etree.XML(self.tostring())
+        xmlschema.assertValid(ET)
         return True
 
     def wrap(self) -> None:
@@ -275,7 +271,7 @@ class moduleItem(baseField):
         uuid: Optional[str] = None,
     ) -> None:
         # we could test for
-        moduleItemN = etree.Element("moduleItem", ID=str(ID), nsmap=NSMAP)
+        moduleItemN = etree.Element("moduleItem", id=str(ID), nsmap=NSMAP)
         if hasAttachments is not None:
             if hasAttachments:
                 moduleItemN.attrib["hasAttachments"] = "true"
@@ -544,7 +540,6 @@ class repeatableGroup(baseField):
         <repeatableGroupItem id="26502225" uuid="1e565113-eff1-4787-aed0-ecad56bc6b36">
         """
         rGrpItem = repeatableGroupItem(ID=ID, uuid=uuid)
-        # itemN = etree.Element("vocabularyReferenceItem", nsmap=NSMAP)
         self.add(rGrpItem)
         return rGrpItem
 
@@ -569,6 +564,7 @@ class repeatableGroupItem(baseField):
     def __init__(self, *, ID: Optional[int] = None, uuid: Optional[str] = None) -> None:
         rGrpItem = etree.Element("repeatableGroupItem", nsmap=NSMAP)
 
+        # id is definitely optional here
         if ID is not None:
             rGrpItem.attrib["id"] = str(ID)
         if uuid is not None:
