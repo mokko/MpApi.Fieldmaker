@@ -96,7 +96,8 @@ from __future__ import annotations
 from lxml.etree import Element
 from lxml import etree
 from mpapi.client import MpApi
-#from mpapi.constants import NSMAP
+
+# from mpapi.constants import NSMAP
 import pkgutil
 from typing import Optional
 
@@ -104,8 +105,10 @@ from typing import Optional
 
 # as usual I have trouble with namespaces, so I am not using default namespace NSMAP,
 # but old skool NSMAP with m prefix
-#NSMAP = {None: "http://www.zetcom.com/ria/ws/module"}
-NSMAP = {"m": "http://www.zetcom.com/ria/ws/module"} # for xpath we need apparently prefix
+# NSMAP = {None: "http://www.zetcom.com/ria/ws/module"}
+NSMAP = {
+    "m": "http://www.zetcom.com/ria/ws/module"
+}  # for xpath we need apparently prefix
 
 known_module_types = ("Object", "Mulimedia")  # TODO: make this configurable
 known_dataTypes = ("Boolean", "Clob", "Date", "Long", "Numeric", "Timestamp", "Varchar")
@@ -130,7 +133,7 @@ class baseField:
     def count_elements(self) -> int:
         """
         Counts all elements (starting with 1).
-        
+
         I cant figure out why namespace m does not work here.
         """
         return int(self.xpath("count(//*)"))
@@ -139,7 +142,7 @@ class baseField:
         # root = self.element.getroottree()
 
         xml = etree.tostring(self.element, pretty_print=True, encoding="unicode")
-        #xml = xml.encode() 
+        # xml = xml.encode()
         return xml
 
     def wrap(self, *, mtype: str, ID: int) -> application:
@@ -169,7 +172,7 @@ class baseField:
 
     def xpath(self, xpath):  # -> something xpath
         # for xpath we apparently need prefix
-        NSMAP = {"m": "http://www.zetcom.com/ria/ws/module"} 
+        NSMAP = {"m": "http://www.zetcom.com/ria/ws/module"}
         return self.element.xpath(xpath, namespaces=NSMAP)
 
     #
@@ -186,23 +189,27 @@ class application(baseField):
         NSMAP = {None: "http://www.zetcom.com/ria/ws/module"}
         self.element = etree.Element("application", nsmap=NSMAP)
 
-    def tofile(self, path:str) -> None:
+    def tofile(self, path: str) -> None:
         doc = etree.ElementTree(self.element)
         doc.write(str(path), pretty_print=True, encoding="UTF-8")
 
     def _update_totalSize(self) -> None:
         """
         OBSOLETE
-        This version updates the totalSize for potentially multiple mtypes, so does 
+        This version updates the totalSize for potentially multiple mtypes, so does
         not return the actual size in a simple int.
         """
-        
+
         mtypeL = self.xpath("/application/modules/module/@name")
         # print (f"GET HERE! {mtypeL}")
         # print (self.tostring())
         for mtype in mtypeL:
             moduleN = self.xpath(f"/application/modules/module[@name = '{mtype}']")[0]
-            totalSize = int(self.xpath(f"count(/application/modules/module[@name = '{mtype}']/moduleItem)"))
+            totalSize = int(
+                self.xpath(
+                    f"count(/application/modules/module[@name = '{mtype}']/moduleItem)"
+                )
+            )
             # print (f"module item SIZE {totalSize}")
             moduleN.attrib["totalSize"] = str(totalSize)
         print(self.tostring())
@@ -229,8 +236,9 @@ class modules(baseField):
         a.add(self)
         return a
 
+
 class module(baseField):
-    def __init__(self, *, name: str, totalSize:Optional[int]=None) -> None:
+    def __init__(self, *, name: str, totalSize: Optional[int] = None) -> None:
         # we could test for known module types
         if name not in known_module_types:
             raise UnknownModuleTypeError(f"Error: Unknown module type '{name}')")
@@ -239,23 +247,24 @@ class module(baseField):
         if totalSize is not None:
             moduleN.attrib["totalSize"] = totalSize
         self.element = moduleN
-        self.mtype=name
+        self.mtype = name
 
     def update_totalSize(self) -> int:
         totalSize = int(self.xpath("count(//module/moduleItem)"))
-        #print (f"module.update_totalSize(): {totalSize}")
+        # print (f"module.update_totalSize(): {totalSize}")
         self.element.attrib["totalSize"] = str(totalSize)
-        #print (self.tostring())
+        # print (self.tostring())
         return totalSize
-        
+
     def wrap(self) -> application:
         a = application()
         m = modules()
         ms = a.add(m)
         ms.add(self)
         a.update_totalSize()
-        print (a.tostring())
+        print(a.tostring())
         return a
+
 
 class moduleItem(baseField):
     def __init__(
@@ -281,7 +290,7 @@ class moduleItem(baseField):
         ms = a.add(modules())
         m = ms.add(module(name=mtype))
         m.add(self)
-        #a.update_totalSize()
+        # a.update_totalSize()
         return a
 
 
@@ -433,7 +442,7 @@ class moduleReference(baseField):
 
 class vocabularyReference(baseField):
     """
-    Can I assume that vocRef always has only one item? Then we could prohibit multiple 
+    Can I assume that vocRef always has only one item? Then we could prohibit multiple
     items.
 
     <vocabularyReference name="ObjPublicationStatusVoc" id="30432" instanceName="ObjPublicationStatusVgr">
@@ -462,22 +471,26 @@ class vocabularyReference(baseField):
         language: Optional[str] = None,
         formattedValue: Optional[str] = None,
     ):
-        vocRefItem = vocabularyReferenceItem(ID=ID, name=name, formattedValue=formattedValue)
+        vocRefItem = vocabularyReferenceItem(
+            ID=ID, name=name, formattedValue=formattedValue
+        )
         self.add(vocRefItem)
         return vocRefItem
 
 
-class vocabularyReferenceItem(baseField): 
-    def __init__(self, *, 
-        ID:int, 
-        name: Optional[str] = None, 
+class vocabularyReferenceItem(baseField):
+    def __init__(
+        self,
+        *,
+        ID: int,
+        name: Optional[str] = None,
         language: Optional[str] = None,
         formattedValue: Optional[str] = None,
-    )  -> None:
+    ) -> None:
         vocRefItemN = etree.Element("vocabularyReferenceItem", nsmap=NSMAP, id=str(ID))
         if name is not None:
             vocRefItemN.attrib["name"] = name
-    
+
         if formattedValue is not None:
             fValueN = etree.Element("formattedValue", nsmap=NSMAP)
             fValueN.text = formattedValue
@@ -486,6 +499,7 @@ class vocabularyReferenceItem(baseField):
             vocRefItemN.append(fValueN)
 
         self.element = vocRefItemN
+
 
 class repeatableGroup(baseField):
     """
@@ -515,7 +529,9 @@ class repeatableGroup(baseField):
     </repeatableGroup>
     """
 
-    def __init__(self, *, name, instanceName: Optional[str] = None, size: Optional[int] = None) -> None:
+    def __init__(
+        self, *, name, instanceName: Optional[str] = None, size: Optional[int] = None
+    ) -> None:
         rGrpN = etree.Element("repeatableGroup", name=name, nsmap=NSMAP)
         if size is not None:
             rGrpN.attrib["size"] = str(size)
@@ -528,9 +544,9 @@ class repeatableGroup(baseField):
         <repeatableGroupItem id="26502225" uuid="1e565113-eff1-4787-aed0-ecad56bc6b36">
         """
         rGrpItem = repeatableGroupItem(ID=ID, uuid=uuid)
-        #itemN = etree.Element("vocabularyReferenceItem", nsmap=NSMAP)
+        # itemN = etree.Element("vocabularyReferenceItem", nsmap=NSMAP)
         self.add(rGrpItem)
-        return rGrpItem  
+        return rGrpItem
 
     def update_size(self) -> int:
         """
@@ -542,17 +558,17 @@ class repeatableGroup(baseField):
             size = rGrp.update_size()
         """
         actual_size = int(self.xpath("count(//repeatableGroup/repeatableGroupItem)"))
-        #print (f"SIZE {actual_size}")
+        # print (f"SIZE {actual_size}")
         rGrpN = self.xpath("//repeatableGroup")[0]
         rGrpN.attrib["size"] = str(actual_size)
-        #print(self.tostring())
+        # print(self.tostring())
         return actual_size
 
 
-class repeatableGroupItem(baseField): 
-    def __init__(self, *, ID:Optional[int]=None, uuid: Optional[str] = None) -> None:
+class repeatableGroupItem(baseField):
+    def __init__(self, *, ID: Optional[int] = None, uuid: Optional[str] = None) -> None:
         rGrpItem = etree.Element("repeatableGroupItem", nsmap=NSMAP)
-        
+
         if ID is not None:
             rGrpItem.attrib["id"] = str(ID)
         if uuid is not None:

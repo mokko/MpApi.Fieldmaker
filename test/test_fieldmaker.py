@@ -7,7 +7,7 @@ from MpApi.fieldmaker import (
     virtualField,
     systemField,
     vocabularyReference,
-    repeatableGroup
+    repeatableGroup,
 )
 from MpApi.fieldmaker import UnknownModuleTypeError
 from mpapi.module import Module
@@ -97,9 +97,12 @@ def test_virField():
 def test_systemField():
     sf = systemField(name="__lastModifiedUser")
     assert sf
+
     sf = systemField(dataType="Varchar", name="__lastModifiedUser")
+
     assert sf
     sf.wrap(mtype="Object", ID=1234)
+
 
 def test_vocabularyReference():
     """
@@ -122,11 +125,16 @@ def test_vocabularyReference():
     vocRef = vocabularyReference(
         name="ObjCategoryVoc", ID=30349, instanceName="ObjCategoryVgr"
     )
-    vocRef.item(ID=3206642, name="Musikinstrument", language="de", formattedValue="Musikinstrument")    
+    vocRef.item(
+        ID=3206642,
+        name="Musikinstrument",
+        language="de",
+        formattedValue="Musikinstrument",
+    )
     a = vocRef.wrap(mtype="Object", ID=1234)
     assert a.count_elements() == 7
 
-    #print(a.tostring())
+    # print(a.tostring())
     # a.validate()
 
 
@@ -140,7 +148,7 @@ def test_repeatableGroup():
         <dataField dataType="Varchar" name="ModifiedByTxt">
           <value>EM_ER</value>
         </dataField>
-        ...        
+        ...
         <moduleReference name="InvNumberSchemeRef" targetModule="InventoryNumber" multiplicity="N:1" size="1">
           <moduleReferenceItem moduleItemId="93" uuid="93">
             <formattedValue language="de">EM-Süd- und Südostasien I C</formattedValue>
@@ -151,7 +159,7 @@ def test_repeatableGroup():
     """
     rGrp = repeatableGroup(name="ObjObjectNumberGrp")
     assert rGrp
-    
+
     rgi = rGrp.item(ID=20774606)
     assert rgi
     a = rGrp.wrap(mtype="Object", ID=1234)
@@ -163,26 +171,29 @@ def test_repeatableGroup():
     assert size == 2
     # print(a.tostring())
 
+
 def test_xpath():
     df = dataField(name="InventarNrSTxt", value="I C 7703")
     a = df.wrap(mtype="Object", ID=1234)
     assert a
     assert a.count_elements() == 6
     assert a.xpath("/application")[0] is not None
-    #print(a.tostring())
+    # print(a.tostring())
+
 
 def test_module():
     df = dataField(name="InventarNrSTxt", value="I C 7703")
     a = df.wrap(mtype="Object", ID=1234)
     a.tofile("debug.xml")
-    #print (a.tostring())
+    # print (a.tostring())
     m = Module(file="debug.xml")
     assert m
 
     m = Module(xml=a.tostring())
     assert m
-    
-    m = Module(xml="""
+
+    m = Module(
+        xml="""
         <application xmlns="http://www.zetcom.com/ria/ws/module">
           <modules>
             <module name="Object" totalSize="1">
@@ -194,25 +205,26 @@ def test_module():
             </module>
           </modules>
         </application>
-    """)
-    
+    """
+    )
+
     assert m
-    
+
     # not clear why this does not work
     # doc = etree.ElementTree(a.element)
     # m = Module(tree=doc)
     # assert m
-    
-    #print (m)
-    #print (f"wrapping inside module: length {len(m)}")
-    #assert m
-    
+
+    # print (m)
+    # print (f"wrapping inside module: length {len(m)}")
+    # assert m
+
     m2 = Module()
     m2.toFile(path="debug2.xml")
-    
-    
+
+
 def test_moduleTotalSize():
     df = dataField(name="InventarNrSTxt", value="I C 7703")
     a = df.wrap(mtype="Object", ID=1234)
-    print(a.tostring())
+    # print(a.tostring())
     assert a
