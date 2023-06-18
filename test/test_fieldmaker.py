@@ -6,8 +6,9 @@ from MpApi.fieldmaker import (
     dataField,
     virtualField,
     systemField,
+    vocabularyReference,
+    repeatableGroup
 )
-from MpApi.fieldmaker import vocabularyReference, repeatableGroup
 from MpApi.fieldmaker import UnknownModuleTypeError
 from mpapi.module import Module
 from lxml import etree
