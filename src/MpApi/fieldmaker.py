@@ -207,16 +207,22 @@ class application(baseField):
             moduleN.attrib["totalSize"] = str(totalSize)
         print(self.tostring())
 
-    def validate(self):
-        xsd_str = pkgutil.get_data("mpapi.client", "data/xsd/module_1_6.xsd")
-        xmlschema_doc = etree.fromstring(xsd_str)
-        xmlschema = etree.XMLSchema(xmlschema_doc)
+    def validate(self) -> True:
+        """
+        Raise with useful error message if validation fails or returns True
+        """
 
+        try:
+            self.xmlschema
+        except:
+            xsd_str = pkgutil.get_data("mpapi.client", "data/xsd/module_1_6.xsd")
+            xmlschema_doc = etree.fromstring(xsd_str)
+            self.xmlschema = etree.XMLSchema(xmlschema_doc)
         #
         # why do I have to transform it to string and back?
-        #
+        # Because it makes a copy?
         ET = etree.XML(self.tostring())
-        xmlschema.assertValid(ET)
+        self.xmlschema.assertValid(ET)
         return True
 
     def wrap(self) -> None:
