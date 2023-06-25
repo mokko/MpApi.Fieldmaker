@@ -1,4 +1,4 @@
-from MpApi.fieldmaker import (
+from MpApi.Fieldmaker import (
     application,
     modules,
     module,
@@ -8,8 +8,9 @@ from MpApi.fieldmaker import (
     systemField,
     vocabularyReference,
     repeatableGroup,
+    UnknownModuleTypeError,
 )
-from MpApi.fieldmaker import UnknownModuleTypeError
+from MpApi.Fieldmaker import UnknownModuleTypeError
 from mpapi.module import Module
 from lxml import etree
 from lxml.etree import _Element
